@@ -12,7 +12,9 @@ import {
   checkLiked,
   checkFavorited,
   toggleLike,
-  toggleFavorite
+  toggleFavorite,
+  fetchMarkerLikeCount,
+  fetchMarkerFavoriteCount
 } from '@/db/api'
 import type { MarkerWithPhotos, MarkerConnection } from '@/db/types'
 
@@ -22,6 +24,9 @@ function MarkerDetailPage() {
   const [loading, setLoading] = useState(true)
   const [liked, setLiked] = useState(false)
   const [favorited, setFavorited] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
+  const [favoriteCount, setFavoriteCount] = useState(0)
+  const [zoomImage, setZoomImage] = useState('')
   const { user } = useAuth()
 
   const markerId = useMemo(() => {
@@ -38,6 +43,15 @@ function MarkerDetailPage() {
     ])
     setMarker(m)
     setConnections(c)
+
+    if (m) {
+      const [likes, favorites] = await Promise.all([
+        fetchMarkerLikeCount(markerId),
+        fetchMarkerFavoriteCount(markerId)
+      ])
+      setLikeCount(likes)
+      setFavoriteCount(favorites)
+    }
 
     if (user && m) {
       const [isLiked, isFavorited] = await Promise.all([
@@ -102,6 +116,7 @@ function MarkerDetailPage() {
       Taro.showToast({ title: result.error, icon: 'none' })
     } else {
       setLiked(result.liked)
+      setLikeCount(prev => result.liked ? prev + 1 : prev - 1)
     }
   }, [user, markerId])
 
@@ -115,6 +130,7 @@ function MarkerDetailPage() {
       Taro.showToast({ title: result.error, icon: 'none' })
     } else {
       setFavorited(result.favorited)
+      setFavoriteCount(prev => result.favorited ? prev + 1 : prev - 1)
     }
   }, [user, markerId])
 
@@ -217,7 +233,11 @@ function MarkerDetailPage() {
             <div className="text-lg font-medium text-foreground mb-3">照片</div>
             <div className="flex flex-col gap-3">
               {marker.photos.map((photo, idx) => (
-                <div key={idx} className="w-full rounded-sm overflow-hidden border-2 border-input bg-white p-2 paper-shadow">
+                <div
+                  key={idx}
+                  onClick={() => setZoomImage(photo.photo_url)}
+                  className="w-full rounded-sm overflow-hidden border-2 border-input bg-white p-2 paper-shadow"
+                >
                   <Image
                     src={photo.photo_url}
                     className="w-full"
@@ -231,26 +251,24 @@ function MarkerDetailPage() {
         )}
 
         {/* 点赞 / 收藏 */}
-        {user && (
-          <div className="flex flex-row gap-3">
-            <button
-              type="button"
-              onClick={handleToggleLike}
-              className={`flex-1 py-3 rounded-sm text-xl font-medium flex items-center justify-center gap-2 paper-shadow ${liked ? 'bg-seal-red text-white' : 'bg-secondary text-violet-deep'}`}
-            >
-              <div className={liked ? 'i-mdi-heart' : 'i-mdi-heart-outline'} />
-              <span>{liked ? '已赞' : '点赞'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleToggleFavorite}
-              className={`flex-1 py-3 rounded-sm text-xl font-medium flex items-center justify-center gap-2 paper-shadow ${favorited ? 'bg-violet-deep text-white' : 'bg-secondary text-violet-deep'}`}
-            >
-              <div className={favorited ? 'i-mdi-star' : 'i-mdi-star-outline'} />
-              <span>{favorited ? '已收藏' : '收藏'}</span>
-            </button>
-          </div>
-        )}
+        <div className="flex flex-row gap-3">
+          <button
+            type="button"
+            onClick={handleToggleLike}
+            className={`flex-1 py-3 rounded-sm text-xl font-medium flex items-center justify-center gap-2 paper-shadow ${liked ? 'bg-seal-red text-white' : 'bg-secondary text-violet-deep'}`}
+          >
+            <div className={liked ? 'i-mdi-heart' : 'i-mdi-heart-outline'} />
+            <span>{liked ? '已赞' : '点赞'} {likeCount > 0 ? `(${likeCount})` : ''}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleToggleFavorite}
+            className={`flex-1 py-3 rounded-sm text-xl font-medium flex items-center justify-center gap-2 paper-shadow ${favorited ? 'bg-violet-deep text-white' : 'bg-secondary text-violet-deep'}`}
+          >
+            <div className={favorited ? 'i-mdi-star' : 'i-mdi-star-outline'} />
+            <span>{favorited ? '已收藏' : '收藏'} {favoriteCount > 0 ? `(${favoriteCount})` : ''}</span>
+          </button>
+        </div>
 
         {/* 故事线入口 */}
         {hasStoryLine && (
@@ -267,6 +285,28 @@ function MarkerDetailPage() {
           </div>
         )}
       </div>
+
+      {/* 图片放大查看 */}
+      {zoomImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+          onClick={() => setZoomImage('')}
+        >
+          <Image
+            src={zoomImage}
+            className="w-full"
+            mode="widthFix"
+            style={{ maxHeight: '90vh' }}
+          />
+          <button
+            type="button"
+            onClick={() => setZoomImage('')}
+            className="absolute top-4 right-4 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"
+          >
+            <div className="i-mdi-close text-white text-xl" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

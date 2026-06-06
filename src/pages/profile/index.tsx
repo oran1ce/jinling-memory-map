@@ -11,7 +11,9 @@ import {
   deleteAllUserData,
   updateProfileAvatar,
   fetchUserLikes,
-  fetchUserFavorites
+  fetchUserFavorites,
+  fetchMarkerLikeCount,
+  fetchMarkerFavoriteCount
 } from '@/db/api'
 import { supabase } from '@/client/supabase'
 import { selectMediaFiles, uploadToSupabase } from '@/utils/upload'
@@ -19,20 +21,39 @@ import type { MarkerWithPhotos } from '@/db/types'
 
 type TabKey = 'footprints' | 'likes' | 'favorites'
 
+interface MarkerCounts {
+  likes: number
+  favorites: number
+}
+
 function ProfilePage() {
   const { user, profile, signOut, refreshProfile } = useAuth()
   const [activeTab, setActiveTab] = useState<TabKey>('footprints')
   const [footprints, setFootprints] = useState<MarkerWithPhotos[]>([])
   const [likes, setLikes] = useState<MarkerWithPhotos[]>([])
   const [favorites, setFavorites] = useState<MarkerWithPhotos[]>([])
+  const [countsMap, setCountsMap] = useState<Record<string, MarkerCounts>>({})
   const [loading, setLoading] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const loadFootprints = useCallback(async () => {
-    if (!user) { setFootprints([]); return }
+    if (!user) { setFootprints([]); setCountsMap({}); return }
     setLoading(true)
     const data = await fetchUserMarkers(user.id)
     setFootprints(data)
+
+    // 获取每条足迹的点赞和收藏数
+    const counts: Record<string, MarkerCounts> = {}
+    await Promise.all(
+      data.map(async (m) => {
+        const [likeCount, favoriteCount] = await Promise.all([
+          fetchMarkerLikeCount(m.id),
+          fetchMarkerFavoriteCount(m.id)
+        ])
+        counts[m.id] = { likes: likeCount, favorites: favoriteCount }
+      })
+    )
+    setCountsMap(counts)
     setLoading(false)
   }, [user])
 
@@ -314,6 +335,20 @@ function ProfilePage() {
                           />
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {/* 点赞 / 收藏统计（仅足迹列表） */}
+                  {activeTab === 'footprints' && countsMap[m.id] && (
+                    <div className="flex items-center gap-4 mt-3 text-base text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <div className="i-mdi-heart text-seal-red" />
+                        <span>{countsMap[m.id].likes} 赞</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="i-mdi-star text-violet-deep" />
+                        <span>{countsMap[m.id].favorites} 收藏</span>
+                      </div>
                     </div>
                   )}
                 </div>

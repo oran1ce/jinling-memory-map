@@ -391,6 +391,30 @@ export async function toggleFavorite(userId: string, markerId: string): Promise<
   return { favorited: true }
 }
 
+export async function fetchMarkerLikeCount(markerId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('likes')
+    .select('*', { count: 'exact', head: true })
+    .eq('marker_id', markerId)
+  if (error) {
+    console.error('Failed to fetch like count:', error)
+    return 0
+  }
+  return count || 0
+}
+
+export async function fetchMarkerFavoriteCount(markerId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('favorites')
+    .select('*', { count: 'exact', head: true })
+    .eq('marker_id', markerId)
+  if (error) {
+    console.error('Failed to fetch favorite count:', error)
+    return 0
+  }
+  return count || 0
+}
+
 export async function checkFavorited(userId: string, markerId: string): Promise<boolean> {
   const { data } = await supabase
     .from('favorites')
