@@ -12,15 +12,11 @@ import WebMap from '@/components/WebMap'
 // 南京市鼓楼区中心坐标（初始视图定位点）
 const GULOU_CENTER = { latitude: 32.062, longitude: 118.783 }
 
-// 缩放级别定义
-const SCALE_FOOTPRINT = 16
-const SCALE_AVATAR = 19
-
 function MapPage() {
   const { user, profile } = useAuth()
   const [markers, setMarkers] = useState<MarkerWithPhotos[]>([])
   const [connections, setConnections] = useState<MarkerConnection[]>([])
-  const [scale, setScale] = useState(17)
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [loading, setLoading] = useState(false)
 
   const loadData = useCallback(async () => {
@@ -37,10 +33,6 @@ function MapPage() {
   useEffect(() => { loadData() }, [loadData])
   useDidShow(() => { loadData() })
 
-  const handleScaleChange = useCallback((newScale: number) => {
-    setScale(newScale)
-  }, [])
-
   const handleMarkerTap = useCallback((markerId: string) => {
     Taro.navigateTo({
       url: `/pages/marker-detail/index?id=${encodeURIComponent(markerId)}`
@@ -54,7 +46,21 @@ function MapPage() {
   }, [])
 
   const handleCenterCampus = useCallback(() => {
+    setUserLocation(null)
     Taro.showToast({ title: '已定位到南大鼓楼', icon: 'none' })
+  }, [])
+
+  const handleGetLocation = useCallback(() => {
+    Taro.getLocation({
+      type: 'wgs84',
+      success: (res) => {
+        setUserLocation({ lat: res.latitude, lng: res.longitude })
+        Taro.showToast({ title: '已定位到当前位置', icon: 'success' })
+      },
+      fail: () => {
+        Taro.showToast({ title: '定位失败，请检查权限', icon: 'none' })
+      }
+    })
   }, [])
 
   const goProfile = useCallback(() => {
@@ -69,22 +75,14 @@ function MapPage() {
           <div className="i-mdi-map-marker text-seal-red text-2xl" />
           <span className="text-xl font-bold text-violet-deep">金陵拾光记</span>
         </div>
-        <div className="flex items-center gap-3">
-          {scale >= SCALE_FOOTPRINT && scale < SCALE_AVATAR && (
-            <span className="text-base text-seal-red bg-seal-red/10 px-2 py-1 rounded-sm">脚印模式</span>
+        <div onClick={goProfile} className="w-10 h-10 rounded-full overflow-hidden border-2 border-violet-deep">
+          {profile?.avatar_url ? (
+            <Image src={profile.avatar_url} className="w-full h-full" mode="aspectFill" />
+          ) : (
+            <div className="w-full h-full bg-violet-deep flex items-center justify-center">
+              <div className="i-mdi-account text-white text-xl" />
+            </div>
           )}
-          {scale >= SCALE_AVATAR && (
-            <span className="text-base text-violet-deep bg-violet-deep/10 px-2 py-1 rounded-sm">头像模式</span>
-          )}
-          <div onClick={goProfile} className="w-10 h-10 rounded-full overflow-hidden border-2 border-violet-deep">
-            {profile?.avatar_url ? (
-              <Image src={profile.avatar_url} className="w-full h-full" mode="aspectFill" />
-            ) : (
-              <div className="w-full h-full bg-violet-deep flex items-center justify-center">
-                <div className="i-mdi-account text-white text-xl" />
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
@@ -93,10 +91,10 @@ function MapPage() {
         <WebMap
           latitude={GULOU_CENTER.latitude}
           longitude={GULOU_CENTER.longitude}
-          scale={scale}
+          scale={17}
           markers={markers}
           connections={connections}
-          onScaleChange={handleScaleChange}
+          userLocation={userLocation}
           onMarkerTap={handleMarkerTap}
           onLongPress={handleLongPress}
         />
@@ -107,6 +105,15 @@ function MapPage() {
             <span className="text-lg text-muted-foreground">加载中...</span>
           </div>
         )}
+
+        {/* 左下角定位按钮 */}
+        <button
+          type="button"
+          onClick={handleGetLocation}
+          className="absolute bottom-4 left-4 w-12 h-12 rounded-full bg-background paper-shadow flex items-center justify-center z-10"
+        >
+          <div className="i-mdi-crosshairs-gps text-violet-deep text-2xl" />
+        </button>
       </div>
 
       {/* 底部操作区 */}
@@ -120,7 +127,7 @@ function MapPage() {
             onClick={handleCenterCampus}
             className="flex-1 py-3 bg-secondary text-violet-deep rounded-sm text-xl font-medium flex items-center justify-center gap-2"
           >
-            <div className="i-mdi-crosshairs-gps" />
+            <div className="i-mdi-home-map-marker" />
             <span>定位校园</span>
           </button>
           {user && (

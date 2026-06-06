@@ -78,3 +78,20 @@
   filter: blur(10px);
   pointer-events: none;
 }
+
+/* Leaflet 弹窗头像样式 */
+.avatar-popup .leaflet-popup-content-wrapper {
+  background: hsl(40 33% 96%);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0;
+}
+
+.avatar-popup .leaflet-popup-content {
+  margin: 8px 12px;
+  line-height: 1.4;
+}
+
+.avatar-popup .leaflet-popup-tip {
+  background: hsl(40 33% 96%);
+}
