@@ -154,7 +154,6 @@ function StoryLinePage() {
                         src={photo.photo_url}
                         className="w-full"
                         mode="widthFix"
-                        style={{ maxHeight: '60vh' }}
                       />
                     </div>
                   ))}

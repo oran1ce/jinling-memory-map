@@ -242,7 +242,6 @@ function MarkerDetailPage() {
                     src={photo.photo_url}
                     className="w-full"
                     mode="widthFix"
-                    style={{ maxHeight: '60vh' }}
                   />
                 </div>
               ))}
@@ -295,7 +294,7 @@ function MarkerDetailPage() {
           <Image
             src={zoomImage}
             className="w-full"
-            mode="widthFix"
+            mode="aspectFit"
             style={{ maxHeight: '90vh' }}
           />
           <button
