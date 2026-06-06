@@ -50,9 +50,6 @@ const NANJING_RING = [
   [NANJING_NE_LAT, NANJING_SW_LNG]
 ]
 
-// 足迹 Marker 最小可见缩放
-const MIN_MARKER_ZOOM = 15
-
 export default function WebMap({
   latitude,
   longitude,
@@ -178,9 +175,6 @@ export default function WebMap({
       map.closePopup(popupMarkerRef.current)
       popupMarkerRef.current = null
     }
-
-    const currentZoom = map.getZoom()
-    if (currentZoom < MIN_MARKER_ZOOM) return
 
     markers.forEach(m => {
       const authorName = m.author?.nickname || m.author?.username || '匿名用户'
