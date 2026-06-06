@@ -39,7 +39,7 @@ function MarkerDetailPage() {
     setLoading(true)
     const [m, c] = await Promise.all([
       fetchMarkerById(markerId),
-      fetchConnectionsByMarkerId(markerId)
+      fetchConnectionsByMarkerId(markerId, user?.id || '')
     ])
     setMarker(m)
     setConnections(c)

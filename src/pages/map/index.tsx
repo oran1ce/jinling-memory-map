@@ -23,12 +23,12 @@ function MapPage() {
     setLoading(true)
     const [markerData, connData] = await Promise.all([
       fetchMarkers(),
-      fetchConnections()
+      user ? fetchConnections(user.id) : Promise.resolve([])
     ])
     setMarkers(markerData)
     setConnections(connData)
     setLoading(false)
-  }, [])
+  }, [user])
 
   useEffect(() => { loadData() }, [loadData])
   useDidShow(() => { loadData() })

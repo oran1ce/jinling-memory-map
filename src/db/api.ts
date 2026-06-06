@@ -204,10 +204,27 @@ export async function deleteMarkerPhoto(id: string): Promise<boolean> {
 
 // ============ Marker Connections ============
 
-export async function fetchConnections(): Promise<MarkerConnection[]> {
+/** 只获取指定用户自己的 marker 之间的连线 */
+export async function fetchConnections(userId: string): Promise<MarkerConnection[]> {
+  // 先获取该用户的所有 marker id
+  const { data: userMarkers, error: markerErr } = await supabase
+    .from('markers')
+    .select('id')
+    .eq('user_id', userId)
+
+  if (markerErr) {
+    console.error('Failed to fetch user markers for connections:', markerErr)
+    return []
+  }
+
+  const markerIds = userMarkers?.map(m => m.id) || []
+  if (markerIds.length === 0) return []
+
+  // 只获取该用户 marker 之间的连线
   const { data, error } = await supabase
     .from('marker_connections')
     .select('*')
+    .in('from_marker_id', markerIds)
     .order('order_index', { ascending: true })
 
   if (error) {
@@ -218,7 +235,18 @@ export async function fetchConnections(): Promise<MarkerConnection[]> {
   return Array.isArray(data) ? data : []
 }
 
-export async function fetchConnectionsByMarkerId(markerId: string): Promise<MarkerConnection[]> {
+/** 只获取指定用户自己的 marker 的连线（用于故事线查看） */
+export async function fetchConnectionsByMarkerId(markerId: string, userId: string): Promise<MarkerConnection[]> {
+  // 先确认该 marker 属于该用户
+  const { data: marker } = await supabase
+    .from('markers')
+    .select('user_id')
+    .eq('id', markerId)
+    .maybeSingle()
+
+  if (!marker || marker.user_id !== userId) return []
+
+  // 再查询该 marker 相关的连线
   const { data, error } = await supabase
     .from('marker_connections')
     .select('*')
@@ -262,7 +290,16 @@ export async function deleteConnection(id: string): Promise<boolean> {
 
 // ============ Story Line ============
 
-export async function fetchStoryLine(startMarkerId: string): Promise<MarkerWithPhotos[]> {
+export async function fetchStoryLine(startMarkerId: string, userId: string): Promise<MarkerWithPhotos[]> {
+  // 先获取该用户的所有 marker id
+  const { data: userMarkers } = await supabase
+    .from('markers')
+    .select('id')
+    .eq('user_id', userId)
+
+  const markerIds = new Set(userMarkers?.map(m => m.id) || [])
+  if (markerIds.size === 0 || !markerIds.has(startMarkerId)) return []
+
   const visited = new Set<string>()
   const result: MarkerWithPhotos[] = []
   const queue: string[] = [startMarkerId]
@@ -280,6 +317,7 @@ export async function fetchStoryLine(startMarkerId: string): Promise<MarkerWithP
         .from('marker_connections')
         .select('*')
         .eq('from_marker_id', currentId)
+        .in('to_marker_id', Array.from(markerIds))
         .order('order_index', { ascending: true })
 
       if (connections) {

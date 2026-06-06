@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { Image } from '@tarojs/components'
 import { withRouteGuard } from '@/components/RouteGuard'
+import { useAuth } from '@/contexts/AuthContext'
 import { fetchStoryLine } from '@/db/api'
 import type { MarkerWithPhotos } from '@/db/types'
 
@@ -11,6 +12,7 @@ function StoryLinePage() {
   const [storyMarkers, setStoryMarkers] = useState<MarkerWithPhotos[]>([])
   const [loading, setLoading] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const { user } = useAuth()
 
   const startMarkerId = useMemo(() => {
     const id = Taro.getCurrentInstance()?.router?.params?.id || ''
@@ -18,12 +20,12 @@ function StoryLinePage() {
   }, [])
 
   const loadData = useCallback(async () => {
-    if (!startMarkerId) return
+    if (!startMarkerId || !user) return
     setLoading(true)
-    const data = await fetchStoryLine(startMarkerId)
+    const data = await fetchStoryLine(startMarkerId, user.id)
     setStoryMarkers(data)
     setLoading(false)
-  }, [startMarkerId])
+  }, [startMarkerId, user])
 
   useEffect(() => { loadData() }, [loadData])
   useDidShow(() => { loadData() })
