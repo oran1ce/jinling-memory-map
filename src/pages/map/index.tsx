@@ -95,6 +95,7 @@ function MapPage() {
           markers={markers}
           connections={connections}
           userLocation={userLocation}
+          currentUserId={user?.id || null}
           onMarkerTap={handleMarkerTap}
           onLongPress={handleLongPress}
         />
@@ -119,7 +120,7 @@ function MapPage() {
       {/* 底部操作区 */}
       <div className="px-5 py-4 bg-parchment paper-shadow z-10">
         <div className="text-center text-lg text-muted-foreground mb-3">
-          长按地图任意位置，留下你的校园故事
+          长按地图任意位置，留下你的故事
         </div>
         <div className="flex flex-row gap-3">
           <button

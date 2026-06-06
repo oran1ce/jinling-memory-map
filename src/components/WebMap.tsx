@@ -8,6 +8,7 @@ interface WebMapProps {
   markers: MarkerWithPhotos[]
   connections: MarkerConnection[]
   userLocation?: { lat: number; lng: number } | null
+  currentUserId?: string | null
   onMarkerTap?: (markerId: string) => void
   onLongPress?: (lat: number, lng: number) => void
 }
@@ -57,6 +58,7 @@ export default function WebMap({
   markers,
   connections,
   userLocation,
+  currentUserId,
   onMarkerTap,
   onLongPress
 }: WebMapProps) {
@@ -179,11 +181,12 @@ export default function WebMap({
     markers.forEach(m => {
       const authorName = m.author?.nickname || m.author?.username || '匿名用户'
       const avatarUrl = m.author?.avatar_url || ''
+      const isOwn = currentUserId && m.user_id === currentUserId
 
-      // 脚印图标
+      // 脚印图标：自己用暗紫罗兰色，其他用户用印泥红
       const icon = L.divIcon({
         className: 'custom-footprint-marker',
-        html: `<div style="width:28px;height:28px;border-radius:50%;background:#B23A48;color:#F9F6F0;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,0.3);">👣</div>`,
+        html: `<div style="width:28px;height:28px;border-radius:50%;background:${isOwn ? '#4A315D' : '#B23A48'};color:#F9F6F0;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,0.3);">👣</div>`,
         iconSize: [28, 28],
         iconAnchor: [14, 14]
       })
