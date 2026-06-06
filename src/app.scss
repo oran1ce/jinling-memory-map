@@ -1,0 +1,80 @@
+@use 'tailwindcss/base';
+@use 'tailwindcss/components';
+@use 'tailwindcss/utilities';
+
+@layer base {
+  :root {
+    /* 羊皮纸色主背景 */
+    --background: 40 33% 96%;
+    --foreground: 0 0% 17%;
+    --card: 40 33% 96%;
+    --card-foreground: 0 0% 17%;
+    --popover: 40 33% 96%;
+    --popover-foreground: 0 0% 17%;
+    /* 暗紫罗兰主色 */
+    --primary: 276 31% 28%;
+    --primary-foreground: 40 33% 96%;
+    --secondary: 40 20% 90%;
+    --secondary-foreground: 276 31% 28%;
+    --muted: 40 20% 90%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 40 20% 90%;
+    --accent-foreground: 276 31% 28%;
+    /* 印泥红强调色 */
+    --destructive: 352 52% 46%;
+    --destructive-foreground: 40 33% 96%;
+    --border: 40 15% 85%;
+    --input: 40 15% 85%;
+    --ring: 276 31% 28%;
+    --radius: 0.125rem;
+    --chart-1: 352 52% 46%;
+    --chart-2: 276 31% 28%;
+    --chart-3: 40 15% 60%;
+    --chart-4: 352 30% 60%;
+    --chart-5: 276 20% 50%;
+    --sidebar-background: 40 33% 96%;
+    --sidebar-foreground: 0 0% 17%;
+    --sidebar-primary: 276 31% 28%;
+    --sidebar-primary-foreground: 40 33% 96%;
+    --sidebar-accent: 40 20% 90%;
+    --sidebar-accent-foreground: 276 31% 28%;
+    --sidebar-border: 40 15% 85%;
+    --sidebar-ring: 276 31% 28%;
+  }
+}
+
+@layer utilities {
+  .bg-parchment {
+    background-color: hsl(40 33% 96%);
+  }
+  .text-charcoal {
+    color: hsl(0 0% 17%);
+  }
+  .text-seal-red {
+    color: hsl(352 52% 46%);
+  }
+  .bg-seal-red {
+    background-color: hsl(352 52% 46%);
+  }
+  .border-seal-red {
+    border-color: hsl(352 52% 46%);
+  }
+  .bg-violet-deep {
+    background-color: hsl(276 31% 28%);
+  }
+  .text-violet-deep {
+    color: hsl(276 31% 28%);
+  }
+  .border-violet-deep {
+    border-color: hsl(276 31% 28%);
+  }
+  .paper-shadow {
+    box-shadow: 0 2px 8px -2px hsl(276 31% 28% / 0.15);
+  }
+}
+
+/* 地图南京市外蒙版：云雾效果 */
+.map-cloud-mask {
+  filter: blur(10px);
+  pointer-events: none;
+}
