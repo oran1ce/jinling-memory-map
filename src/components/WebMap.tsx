@@ -89,6 +89,8 @@ export default function WebMap({
       maxBoundsViscosity: 1.0
     })
 
+    const container = map.getContainer()
+
     // 高德瓦片
     L.tileLayer(GAODE_TILE_URL, {
       subdomains: '1234',
@@ -107,21 +109,95 @@ export default function WebMap({
     }).addTo(map)
 
     // 长按创建新标记
-    let pressTimer: ReturnType<typeof setTimeout> | null = null
-    map.on('mousedown', (e: any) => {
-      pressTimer = setTimeout(() => {
-        onLongPress?.(e.latlng.lat, e.latlng.lng)
-      }, 600)
-    })
-    map.on('mouseup', () => {
-      if (pressTimer) { clearTimeout(pressTimer); pressTimer = null }
-    })
-    map.on('mousemove', () => {
-      if (pressTimer) { clearTimeout(pressTimer); pressTimer = null }
-    })
+    // PC + 手机长按创建故事
+let pressTimer: ReturnType<typeof setTimeout> | null = null
+
+let startX = 0
+let startY = 0
+
+const startPress = (e: any) => {
+  if (pressTimer) clearTimeout(pressTimer)
+
+  pressTimer = setTimeout(() => {
+    onLongPress?.(e.latlng.lat, e.latlng.lng)
+  }, 500)
+}
+
+const cancelPress = () => {
+  if (pressTimer) {
+    clearTimeout(pressTimer)
+    pressTimer = null
+  }
+}
+
+// PC
+map.on('mousedown', startPress)
+map.on('mouseup', cancelPress)
+map.on('mousemove', cancelPress)
+
+// 手机
+let touchTimer: ReturnType<typeof setTimeout> | null = null
+
+container.addEventListener('touchstart', (event) => {
+  // 只有单指才允许长按
+  if (event.touches.length !== 1) {
+    return
+  }
+
+  const touch = event.touches[0]
+
+  startX = touch.clientX
+  startY = touch.clientY
+
+  touchTimer = setTimeout(() => {
+    const rect = container.getBoundingClientRect()
+
+    const point = L.point(
+      touch.clientX - rect.left,
+      touch.clientY - rect.top
+    )
+
+    const latlng = map.containerPointToLatLng(point)
+
+    onLongPress?.(
+      latlng.lat,
+      latlng.lng
+    )
+  }, 600)
+})
+
+container.addEventListener('touchend', () => {
+  if (touchTimer) {
+    clearTimeout(touchTimer)
+    touchTimer = null
+  }
+})
+
+container.addEventListener('touchmove', (event) => {
+  // 双指缩放时取消长按
+  if (event.touches.length > 1) {
+    if (touchTimer) {
+      clearTimeout(touchTimer)
+      touchTimer = null
+    }
+    return
+  }
+
+  const touch = event.touches[0]
+
+  const dx = Math.abs(touch.clientX - startX)
+  const dy = Math.abs(touch.clientY - startY)
+
+  if (dx > 15 || dy > 15) {
+    if (touchTimer) {
+      clearTimeout(touchTimer)
+      touchTimer = null
+    }
+  }
+})
 
     mapRef.current = map
-
+    
     return () => {
       map.remove()
       mapRef.current = null

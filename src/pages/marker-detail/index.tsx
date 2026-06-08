@@ -236,12 +236,15 @@ function MarkerDetailPage() {
                 <div
                   key={idx}
                   onClick={() => setZoomImage(photo.photo_url)}
-                  className="w-full rounded-sm overflow-hidden border-2 border-input bg-white p-2 paper-shadow"
+                  className="w-full rounded-sm border-2 border-input bg-white p-2 paper-shadow"
                 >
-                  <Image
+                  <img
                     src={photo.photo_url}
-                    className="w-full"
-                    mode="widthFix"
+                    alt=""
+                    style={{
+                      width: '100%',
+                      display: 'block'
+                    }}
                   />
                 </div>
               ))}
@@ -288,22 +291,30 @@ function MarkerDetailPage() {
       {/* 图片放大查看 */}
       {zoomImage && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/90 overflow-auto"
           onClick={() => setZoomImage('')}
         >
-          <Image
-            src={zoomImage}
-            className="w-full"
-            mode="aspectFit"
-            style={{ maxHeight: '90vh' }}
-          />
-          <button
-            type="button"
-            onClick={() => setZoomImage('')}
-            className="absolute top-4 right-4 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"
+          <div
+            style={{
+              minHeight: '100vh',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: '20px'
+            }}
           >
-            <div className="i-mdi-close text-white text-xl" />
-          </button>
+            <img
+              src={zoomImage}
+              alt=""
+              style={{
+                maxWidth: '95vw',
+                maxHeight: '90vh',
+                width: 'auto',
+                height: 'auto',
+                objectFit: 'contain'
+              }}
+            />
+          </div>
         </div>
       )}
     </div>

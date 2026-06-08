@@ -23,10 +23,11 @@ function UserProfilePage() {
 
   const loadProfile = useCallback(async (id: string) => {
     const { data } = await supabase
-      .from('profiles')
-      .select('id, nickname, avatar_url, username')
+      .from('public_profiles')
+      .select('*')
       .eq('id', id)
       .maybeSingle()
+  
     if (data) setProfile(data as PublicProfile)
   }, [])
 
